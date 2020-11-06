@@ -1,0 +1,59 @@
+```{r packages}
+
+library(tidyverse)
+
+```
+
+```{r data}
+
+simulations <- read_csv("data/election_simulation_results.csv")
+
+set.seed(9)
+ev_uncertainty <- simulations %>% 
+  mutate(biden_win = ifelse(sim_dvotes_2020 > sim_rvotes_2020, 1, 0)) %>% 
+  group_by(state, electoral_votes) %>% 
+  summarise(pct_biden_win = mean(biden_win, na.rm = TRUE)) %>% 
+  mutate(close = pct_biden_win - .5) %>% 
+  arrange(abs(close)) %>% 
+  select(state, pct_biden_win, electoral_votes) %>% 
+  
+  # simulating 100,000 elections in each state with the given win probabilities
+  
+  slice(rep(1:n(), each = 100000)) %>% 
+  mutate(biden_win = map_int(pct_biden_win, ~ rbinom(1, 1, .)),
+         id = 1:100000,
+         biden_ev = ifelse(biden_win == 1, electoral_votes, 0),
+         trump_ev = ifelse(biden_win == 0, electoral_votes, 0))
+
+
+```
+
+```{r biden_wins}
+
+# getting list of states that Biden won in each simulation
+
+ev_sim_results <- ev_uncertainty %>% 
+  group_by(id) %>% 
+  mutate(biden_win = as.character(biden_win),
+    biden_win = case_when(biden_win == "1" ~ state)) %>% 
+  drop_na(biden_win) %>% 
+  select(id, biden_win) %>% 
+  nest() %>% 
+  arrange(id)
+
+# comparing to the states that Biden actually won
+
+biden_actual_results <- c("WA", "OR", "CA", "AZ", "NM", "CO", "MN", "WI", "IL", "MI", "VA",
+                          "MD", "DE", "NJ", "CT", "RI", "MA", "NH", "VT", "ME")
+
+```
+
+
+```{r}
+
+
+
+```
+
+
+

@@ -1,0 +1,40 @@
+---
+output: 
+  html_document:
+    theme: yeti
+---
+
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE)
+
+library(tidyverse)
+library(usmap)
+library(plotly)
+library(scales)
+
+sims <- read_csv("../app-data/election_simulation_results.csv")
+
+```
+
+```{r map, warning=FALSE, message=FALSE}
+
+sim_map <- sims %>% 
+  drop_na() %>% 
+  group_by(state) %>% 
+  mutate(d_pv2p = sim_dvotes_2020 / (sim_rvotes_2020 + sim_dvotes_2020),
+         r_pv2p = 1 - d_pv2p) %>% 
+  summarise(d_pv2p = mean(d_pv2p) * 100,
+            r_pv2p = mean(r_pv2p) * 100) %>% 
+  mutate(d_margin = d_pv2p - r_pv2p) %>% 
+  plot_usmap(regions = "states", data = ., values = "d_margin") +
+  theme_void() +
+  scale_fill_gradient2(high = muted("blue"), mid = "white", low = "red3") +
+  labs(title = "Predicted Win Margin in Each State",
+       fill = "Biden's Predicted \nWin Margin (%)")
+
+ggplotly(sim_map)
+
+```
+

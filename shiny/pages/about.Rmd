@@ -1,0 +1,9 @@
+---
+output:
+  html_document:
+    theme: "cosmo"
+---
+
+## About
+
+See the full election blog [here](https://kayla-manning.github.io/gov1347/).

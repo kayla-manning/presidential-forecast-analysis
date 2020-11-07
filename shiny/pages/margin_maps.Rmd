@@ -13,14 +13,47 @@ library(tidyverse)
 library(usmap)
 library(plotly)
 library(scales)
+library(maps)
+library(mapproj)
 
 sims <- read_csv("../app-data/election_simulation_results.csv")
+
+
+{
+  monochrome <- c('#760000', '#BE1E26', '#D84742', '#FF6B61', '#FF9586')
+  primary <- c('#EE3838', '#FA9E1C', '#78C4D4', '#4B5973', '#E2DDDB')
+  sidebysidebarplot <- c("#ef3e3e", "#2c3e50")
+  theme_hodp <- function () { 
+    theme_classic(base_size=12, base_family="Helvetica") %+replace%
+      theme(
+        panel.background  = element_rect(fill="#F2F2F2", colour=NA),
+        plot.background = element_rect(fill="#F2F2F2", colour="#d3d3d3"),
+        legend.background = element_rect(fill="transparent", colour=NA),
+        legend.key = element_rect(fill="transparent", colour=NA),
+        plot.title = element_text(size=24,  family="Helvetica", face = "bold", margin = margin(t = 0, r = 0, b = 10, l = 0)),
+        plot.subtitle = element_text(size=18,  family="Helvetica", color="#717171", face = "italic", margin = margin(t = 0, r = 0, b = 10, l = 0)),
+        plot.caption = element_text(size=8,  family="Helvetica", hjust = 1),
+        axis.text.x =element_text(size=10,  family="Helvetica"),
+        axis.title.x =element_text(size=14, family="Helvetica", margin = margin(t = 10, r = 0, b = 0, l = 0), face = "bold"),
+        axis.title.y = element_text(margin = margin(t = 0, r = 10, b = 0, l = 0), size=14, family="Helvetica", angle=90, face ='bold'),
+        legend.title=element_text(size=10, family="Helvetica"), 
+        legend.text=element_text(size=10, family="Helvetica"),
+        legend.position = "bottom",
+        axis.ticks = element_blank()
+      )
+    }
+}
+
 
 ```
 
 ```{r map, warning=FALSE, message=FALSE}
 
-sim_map <- sims %>% 
+us_map <- map_data("state") %>% 
+  mutate(region = toupper(region),
+    region = state.abb[match(region,  toupper(state.name))])
+
+p <- sims %>% 
   drop_na() %>% 
   group_by(state) %>% 
   mutate(d_pv2p = sim_dvotes_2020 / (sim_rvotes_2020 + sim_dvotes_2020),
@@ -28,13 +61,32 @@ sim_map <- sims %>%
   summarise(d_pv2p = mean(d_pv2p) * 100,
             r_pv2p = mean(r_pv2p) * 100) %>% 
   mutate(d_margin = d_pv2p - r_pv2p) %>% 
-  plot_usmap(regions = "states", data = ., values = "d_margin") +
+  left_join(us_map, by = c("state" = "region")) %>% 
+  ggplot(aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = d_margin, 
+                   text = paste0("Joe Biden's Projected Win Margin: ", round(d_margin, 3), "%")), 
+               color = "white") +
   theme_void() +
-  scale_fill_gradient2(high = muted("blue"), mid = "white", low = "red3") +
+  scale_fill_gradientn(colours = c('#760000', "white", '#4B5973')) +
   labs(title = "Predicted Win Margin in Each State",
-       fill = "Biden's Predicted \nWin Margin (%)")
+       fill = "Predicted Democratic \nWin Margin (%)") +
+  theme_hodp() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        panel.background = element_blank(),
+        plot.background = element_blank())
 
-ggplotly(sim_map)
+ax <- list(
+  title = "",
+  zeroline = FALSE,
+  showline = FALSE,
+  showticklabels = FALSE,
+  showgrid = FALSE
+)
+
+ggplotly(p, tooltip = "text") %>% 
+  layout(xaxis = ax, yaxis = ax, autosize = T)
 
 ```
 

@@ -11,7 +11,7 @@
   library(plotly)
   library(shinythemes)
   library(usmap)
-
+  library(knitr)
 }
 
 
@@ -59,6 +59,8 @@ pv2p_plot <- function(x) {
   # filter based on input$state from ui.R
   # getting text to specify the predicted pv2p and the chance of victory
   
+  title <- paste("Simulated Two-Party Popular Vote \nin", x)
+  
   pv2p <- sims %>% 
     drop_na() %>% 
     filter(state == x) %>% 
@@ -90,14 +92,14 @@ pv2p_plot <- function(x) {
     scale_fill_manual(breaks = c("Democrat", "Republican"),
                       labels = c("Biden", "Trump"),
                       values = c(muted("blue"), "red3")) +
-    labs(title = paste("Simulated Two-Party Popular Vote \nin", x),
+    labs(title = "",
          x = "Predicted Share of the Two-Party Popular Vote",
          y = "Probability",
          fill = "Candidate",
          subtitle = pv2p_lab) +
     theme_hodp()
   
-  print(ggplotly(pv_plot, tooltip = "text"))
+  ggplotly(pv_plot, tooltip = "text")
 }
 
 # making state types for the below win probability plots
@@ -150,13 +152,13 @@ state_voteshares <- function(x){
     labs(x = "",
          y = "Estimated Vote Share",
          fill = "Candidate",
-         title = title)
+         title = "")
   
   print(ggplotly(p, tooltip = "text"))
   
 }
 
-# writing function to display blots with probabilties of victory
+# writing function to display blots with probabilities of victory
 
 state_win_probs <- function(x) {
   
@@ -194,7 +196,7 @@ state_win_probs <- function(x) {
     labs(x = "",
          y = "Probability of \nVictory",
          fill = "Candidate",
-         title = title)
+         title = "")
     
   print(ggplotly(p, tooltip = "text"))
   

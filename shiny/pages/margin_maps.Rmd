@@ -67,15 +67,13 @@ p <- sims %>%
                    text = paste0("Joe Biden's Projected Win Margin: ", round(d_margin, 3), "%")), 
                color = "white") +
   theme_void() +
-  scale_fill_gradientn(colours = c('#760000', "white", '#4B5973')) +
+  scale_fill_gradientn(colours = c("red3", "white", muted("blue"))) +
   labs(title = "Predicted Win Margin in Each State",
        fill = "Predicted Democratic \nWin Margin (%)") +
   theme_hodp() +
   theme(axis.title.x=element_blank(),
         axis.text.x=element_blank(),
-        axis.ticks.x=element_blank(),
-        panel.background = element_blank(),
-        plot.background = element_blank())
+        axis.ticks.x=element_blank())
 
 ax <- list(
   title = "",

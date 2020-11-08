@@ -1,0 +1,117 @@
+---
+title:
+output: 
+  html_document:
+    theme: "journal"
+runtime: shiny
+css: custom.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+source("helper.R")
+```
+
+## About
+
+This interactive tool aims to supplement a semester-long project in which I forecasted the 2020 Presidential Election. The below interactive tools present and contextualize my predictions in a more visual manner than I did in my blog posts. Feel free to scroll through and enjoy! This page is largely inspired by the [FiveThirtyEight](https://projects.fivethirtyeight.com/2020-election-forecast/) forecast. Nate Silver, if you're seeing this, please hire me! See my full election blog and forecast write-up [here](https://kayla-manning.github.io/gov1347/).
+
+## Point Prediction Map
+
+```{r map, warning=FALSE}
+
+us_map <- map_data("state") %>% 
+  mutate(region = toupper(region),
+    region = state.abb[match(region,  toupper(state.name))])
+
+p <- sims %>% 
+  drop_na() %>% 
+  group_by(state) %>% 
+  mutate(d_pv2p = sim_dvotes_2020 / (sim_rvotes_2020 + sim_dvotes_2020),
+         r_pv2p = 1 - d_pv2p) %>% 
+  summarise(d_pv2p = mean(d_pv2p) * 100,
+            r_pv2p = mean(r_pv2p) * 100, .groups = "drop") %>% 
+  mutate(d_margin = d_pv2p - r_pv2p) %>% 
+  left_join(us_map, by = c("state" = "region")) %>% 
+  ggplot(aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = d_margin, 
+                   text = paste0("Joe Biden's Projected Win Margin: ", round(d_margin, 3), "%")), 
+               color = "white") +
+  theme_void() +
+  scale_fill_gradientn(colours = c(my_red, "white", muted("blue"))) +
+  labs(title = "",
+       fill = "Predicted Democratic \nWin Margin (%)") +
+  theme_hodp() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) + 
+  coord_sf()
+
+ax <- list(
+  title = "",
+  zeroline = FALSE,
+  showline = FALSE,
+  showticklabels = FALSE,
+  showgrid = FALSE
+)
+
+ggplotly(p, tooltip = "text") %>% 
+  layout(xaxis = ax, yaxis = ax)
+
+```
+
+
+## Estimated Vote Shares and Predicted Probabilities of Victory {.tabset}
+
+Add a note about how probabilistic forecasts can be dangerous, emphasizing the difference between these two graphs.
+
+### Vote Shares
+
+```{r state_predicted_pv}
+
+selectInput("state_type",
+            "State Category:",
+            types %>% pull(type) %>% unique())
+
+renderPlotly(
+  state_voteshares(input$state_type)
+)
+
+```
+
+### Win Probabilities
+
+```{r state_win_probs}
+
+selectInput("state_type",
+            "State Category:",
+            types %>% pull(type) %>% unique())
+
+renderPlotly(
+  state_win_probs(input$state_type)
+)
+
+```
+
+## State-Level Two-Party Vote Share Predictions
+
+To further illustrate the different between a probability of victory, "wins" are when the candidate's two-party vote share exceed 0.5.
+
+
+```{r state_sim_histograms}
+
+selectInput("state", 
+            "State:",
+            sims %>% pull(state) %>% unique() %>% sort())
+
+renderPlotly(
+  pv2p_plot(input$state)
+)
+
+```
+
+# Nationwide Simulation Results
+
+(show PV first so they can compare the overlap between state histograms and this, but include a tab for EV chances so they can compare how biased the Electoral College truly is)... maybe also include a note about how people elect the president, not land
+
+

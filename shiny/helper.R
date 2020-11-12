@@ -12,6 +12,7 @@
   library(shinythemes)
   library(usmap)
   library(knitr)
+  library(flexdashboard)
 }
 
 
@@ -19,7 +20,8 @@
 
 {
   sims <- read_csv("app-data/election_simulation_results.csv")
-  ev_sims <- read_csv("app-data/ev_uncertainty.csv")
+  ev_sims <- read_csv("app-data/ev_uncertainty.csv") %>% 
+    select(id, biden_ev, trump_ev)
 }
 
 

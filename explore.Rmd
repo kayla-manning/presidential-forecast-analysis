@@ -1,10 +1,26 @@
 ```{r packages}
 
 library(tidyverse)
+library(gganimate)
+library(transformr)
+library(scales)
+library(usmap)
+library(lubridate)
+library(gifski)
+library(png)
+library(DescTools)
+
+url <- "https://raw.githubusercontent.com/alex/nyt-2020-election-scraper/master/all-state-changes.csv"
+
+votes <- read_csv(url) %>% 
+  mutate(state = str_replace(state, " \\(.*\\)", ""),
+         state = state.abb[match(state, state.name)],
+         timestamp = ymd_hms(timestamp),
+         pct_reported = precincts_reporting / precincts_total * 100)
 
 ```
 
-```{r data}
+```{r sim_data}
 
 simulations <- read_csv("data/election_simulation_results.csv")
 
@@ -49,11 +65,61 @@ biden_actual_results <- c("WA", "OR", "CA", "AZ", "NM", "CO", "MN", "WI", "IL", 
 ```
 
 
-```{r}
+```{r timeline}
 
 
+votes %>% 
+  filter(state == "GA") %>% 
+  mutate(trump_votes = case_when(leading_candidate_name == "Trump" ~ leading_candidate_votes,
+                                 TRUE ~ trailing_candidate_votes),
+         biden_votes = case_when(leading_candidate_name == "Biden" ~ leading_candidate_votes,
+                                 TRUE ~ trailing_candidate_votes),
+         trump_pv2p = trump_votes / (biden_votes + trump_votes),
+         biden_pv2p = biden_votes / (biden_votes + trump_votes)) %>% 
+  pivot_longer(cols = trump_pv2p:biden_pv2p, names_to = "candidate", values_to = "pv2p") %>% 
+  ggplot(aes(timestamp, pv2p, color = candidate)) +
+  geom_line()
 
 ```
 
+```{r anim_map}
+
+us_map <- map_data("state") %>% 
+  mutate(region = toupper(region),
+    region = state.abb[match(region,  toupper(state.name))])
+
+p <- votes %>%  
+  mutate(trump_votes = case_when(leading_candidate_name == "Trump" ~ leading_candidate_votes,
+                                 TRUE ~ trailing_candidate_votes),
+         biden_votes = case_when(leading_candidate_name == "Biden" ~ leading_candidate_votes,
+                                 TRUE ~ trailing_candidate_votes),
+         trump_pv2p = trump_votes / (biden_votes + trump_votes),
+         biden_pv2p = biden_votes / (biden_votes + trump_votes),
+         biden_margin = biden_pv2p - trump_pv2p) %>% 
+  left_join(us_map, by = c("state" = "region")) %>% 
+  mutate(date = ymd(str_sub(timestamp, end = 10)),
+    time = hms(str_sub(timestamp, 11)),
+    hour = str_sub(time, end = 2),
+    pct_reported = RoundTo(pct_reported, 10)) %>% 
+  group_by(state, pct_reported, long, lat) %>% 
+  mutate(biden_margin = mean(biden_margin)) %>% 
+  ungroup() %>% 
+  ggplot(aes(long, lat, group = group)) +
+  geom_polygon(aes(fill = biden_margin), 
+                color = "white") +
+  coord_sf() +
+  theme_void() +
+  scale_fill_gradientn(colours = c(my_red, "white", muted("blue")),
+                       breaks = c(-0.4, 0, 0.4)) +
+  labs(title = "",
+       fill = "Democratic Vote Margin (%)") +
+  theme_hodp() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank()) 
+p + 
+  transition_manual(pct_reported)
+
+```
 
 

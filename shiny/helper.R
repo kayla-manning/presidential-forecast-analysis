@@ -6,13 +6,17 @@
 
 {
   library(shiny)
-  library(tidyverse)
   library(scales)
   library(plotly)
   library(shinythemes)
   library(usmap)
   library(knitr)
   library(flexdashboard)
+  library(lubridate)
+  library(tidyverse)
+  library(kableExtra)
+  library(janitor)
+  library(googlesheets4)
 }
 
 
@@ -22,6 +26,21 @@
   sims <- read_csv("app-data/election_simulation_results.csv")
   ev_sims <- read_csv("app-data/ev_uncertainty.csv") %>% 
     select(id, biden_ev, trump_ev)
+  pred_compare <- read_csv("app-data/pred_compare.csv")
+  changes <- read_csv("https://raw.githubusercontent.com/alex/nyt-2020-election-scraper/master/all-state-changes.csv") %>% 
+    mutate(state = str_replace(state, " \\(.*\\)", ""),
+           state = state.abb[match(state, state.name)],
+           timestamp = ymd_hms(timestamp),
+           pct_reported = precincts_reporting / precincts_total * 100) %>% 
+    mutate(trump_votes = case_when(leading_candidate_name == "Trump" ~ leading_candidate_votes,
+                                   TRUE ~ trailing_candidate_votes),
+           biden_votes = case_when(leading_candidate_name == "Biden" ~ leading_candidate_votes,
+                                   TRUE ~ trailing_candidate_votes),
+           trump_pv2p = trump_votes / (biden_votes + trump_votes),
+           biden_pv2p = biden_votes / (biden_votes + trump_votes)) %>% 
+    pivot_longer(cols = trump_pv2p:biden_pv2p, names_to = "candidate", values_to = "pv2p") %>% 
+    mutate(candidate = recode(candidate, "biden_pv2p" = "Biden",
+                              "trump_pv2p" = "Trump"))
 }
 
 
@@ -71,6 +90,14 @@ pv2p_plot <- function(x) {
     summarise(d_pv2p = mean(d_pv2p) * 100,
               r_pv2p = mean(r_pv2p) * 100)
   
+  biden_pv2p <- enos_data %>% 
+    mutate(state = state.abb[match(state, state.name)]) %>% 
+    filter(state == x) %>% 
+    summarise(d_pv2p = democrat / (democrat + republican)) %>% 
+    pull(d_pv2p)
+  
+  trump_pv2p <- 1 - biden_pv2p
+  
   win_prob <- sims %>% 
     mutate(biden_win = ifelse(sim_dvotes_2020 > sim_rvotes_2020, 1, 0)) %>% 
     group_by(state) %>% 
@@ -91,9 +118,11 @@ pv2p_plot <- function(x) {
     ggplot(aes(value, fill = party)) +
     geom_histogram(aes(y = after_stat(count / sum(count)),
                        text = paste0("Probability: ", round(after_stat(count / sum(count)), 5))), bins = 1000, alpha = 0.5, position = "identity") +
+    geom_vline(xintercept = biden_pv2p) +
+    geom_vline(xintercept = trump_pv2p) +
     scale_fill_manual(breaks = c("Democrat", "Republican"),
                       labels = c("Biden", "Trump"),
-                      values = c(muted("blue"), "red3")) +
+                      values = c(my_blue, my_red)) +
     labs(title = "",
          x = "Predicted Share of the Two-Party Popular Vote",
          y = "Probability",
@@ -202,6 +231,76 @@ state_win_probs <- function(x) {
     
   print(ggplotly(p, tooltip = "text"))
   
+}
+
+us_map <- map_data("state") %>% 
+  mutate(region = toupper(region),
+         region = state.abb[match(region,  toupper(state.name))])
+
+# data from Professor Enos... will use this to calculate the overall national
+# pv2p
+
+{
+  enos_data <- read_sheet("https://docs.google.com/spreadsheets/d/1faxciehjNpYFNivz-Kiu5wGl32ulPJhdJTDsULlza5E/edit#gid=0", 
+                          col_types = paste0("dcc", paste0(rep("d", times = 39), collapse = ""), collapse = "")) %>% 
+    slice(-1) %>% 
+    unnest(FIPS) %>% 
+    clean_names() %>% 
+    rename("democrat" = joseph_r_biden_jr,
+           "republican" = donald_j_trump,
+           "state" = geographic_name) %>% 
+    select(state, democrat, republican) 
+  
+  enos_pv2p <- enos_data %>% 
+    mutate(democrat = democrat / (democrat + republican) * 100,
+           republican = 100 - democrat,
+           state = state.abb[match(state, state.name)]) %>% 
+    pivot_longer(2:3, names_to = "party", values_to = "actual_pv2p")
+  
+  pred <- sims %>% 
+    drop_na() %>% 
+    group_by(state) %>% 
+    mutate(d_pv2p = sim_dvotes_2020 / (sim_rvotes_2020 + sim_dvotes_2020),
+           r_pv2p = 1 - d_pv2p) %>% 
+    summarise(d_pv2p = mean(d_pv2p),
+              r_pv2p = mean(r_pv2p),
+              d_margin = d_pv2p - r_pv2p) %>% 
+    select(1:3) %>% 
+    pivot_longer(d_pv2p:r_pv2p, names_to = "party", values_to = "pred_pv2p") %>% 
+    mutate(party = recode(party, d_pv2p = "democrat",
+                          r_pv2p = "republican"),
+           pred_pv2p = pred_pv2p * 100)
+  
+  enos_pred_compare <- enos_pv2p %>% 
+    inner_join(pred, by = c("state", "party")) %>% 
+    mutate(diff = actual_pv2p - pred_pv2p) %>% 
+    filter(party == "democrat") 
+  }
+
+# writing function to find the predicted pv2p for the given state
+
+state_pred_pv2p <- function(x, candidate) {
+  
+  pv2ps <- sims %>% 
+    drop_na() %>% 
+    group_by(state) %>% 
+    mutate(d_pv2p = sim_dvotes_2020 / (sim_rvotes_2020 + sim_dvotes_2020),
+           r_pv2p = 1 - d_pv2p) %>% 
+    summarise(d_pv2p = mean(d_pv2p),
+              r_pv2p = mean(r_pv2p)) %>% 
+    filter(state == x) %>% 
+    select(2:3) %>% 
+    pivot_longer(cols = everything(), names_to = "party") %>% 
+    pull(value)
+    
+  if (candidate == "biden") {
+    pv2ps[1]
+  }
+  
+  if (candidate == "trump") {
+    pv2ps[2]
+  }
+    
 }
 
 

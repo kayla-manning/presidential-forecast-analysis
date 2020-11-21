@@ -2,3 +2,13 @@
 body {
   background-color: #F2F2F2;
 }
+
+.navbar, [data-toggle=tab] {
+  background-color:#D84742;
+  border-color:black;
+}
+.navbar-brand {
+color:#D84742;
+}
+
+

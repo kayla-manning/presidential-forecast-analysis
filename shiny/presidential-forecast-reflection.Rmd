@@ -22,18 +22,48 @@ Home
 
 ### About
 
-This interactive tool aims to supplement a semester-long project in which I forecasted the 2020 Presidential Election. The below interactive tools present and contextualize my predictions in a more visual manner than I did in my blog posts. Feel free to scroll through and enjoy! This page is largely inspired by the [FiveThirtyEight](https://projects.fivethirtyeight.com/2020-election-forecast/) forecast. Nate Silver, if you're seeing this, please hire me! See my full election blog and forecast write-up [here](https://kayla-manning.github.io/gov1347/).
+This interactive tool aims to supplement a semester-long project in which I forecasted the 2020 Presidential Election. The below interactive tools present and contextualize my predictions in a more visual manner than I did in my blog posts. Nate Silver, if you're seeing this, please hire me! See my full election blog and forecast write-up [here](https://kayla-manning.github.io/gov1347/).
 
 Row
 -------------------------------------------------
 
-### Actual Results
+### Actual Electoral Votes
 
-```{r actual_gauge}
+```{r actual_ev_gauge}
 
-radioButtons("actual_scenario",
-            "",
-            c("Electoral Votes", "Two-Party Popular Vote"))
+# Biden actual EV gauge
+
+renderGauge(
+
+  gauge(306,
+        min = 0, 
+        max = 538,
+        gaugeSectors(
+          success = c(270, 538), 
+          warning = c(269, 269), 
+          danger = c(0, 268)), 
+        label = "Electoral Votes \nfor Biden")
+)
+
+# Trump actual EV gauge
+
+renderGauge(
+  
+  gauge(232, 
+        min = 0, 
+        max = 538,
+        gaugeSectors(
+          success = c(270, 538),
+          warning = c(269, 269), 
+          danger = c(0, 268)),
+        label = "Electoral Votes \nfor Trump")
+)
+
+```
+
+### Actual Two-Party Popular Vote Share
+
+```{r actual_pv2p_gauge}
 
 biden_actual_pv2p <- enos_data %>% 
   summarise(democrat = sum(democrat),
@@ -41,105 +71,111 @@ biden_actual_pv2p <- enos_data %>%
   summarise(democrat = round(democrat / (democrat + republican) * 100, 3)) %>% 
   pull(democrat)
 
-# Biden gauge
-
-renderGauge(
-
-  gauge(ifelse(input$actual_scenario == "Electoral Votes", 306, 
-               biden_actual_pv2p), 
-        min = 0, 
-        max = ifelse(input$actual_scenario == "Electoral Votes", 538, 100),
-        gaugeSectors(
-          success = ifelse(input$actual_scenario == "Electoral Votes", 
-                           c(270, 538),
-                           c(50.1, 100)), 
-          warning = ifelse(input$actual_scenario == "Electoral Votes", 
-                           c(269, 269),
-                           c(50, 50)), 
-          danger = ifelse(input$actual_scenario == "Electoral Votes", 
-                          c(0, 268),
-                           c(0, 49.9))), 
-        label = ifelse(input$actual_scenario == "Electoral Votes", 
-                       "Electoral Votes \for Biden", 
-                       "Two-Party Popular Vote \for Biden"))
-)
-
-# Trump gauge
+# Biden actual pv2p gauge
 
 renderGauge(
   
-  gauge(ifelse(input$actual_scenario == "Electoral Votes", 232, 
-               100 - biden_actual_pv2p),
+  gauge(biden_actual_pv2p,
         min = 0, 
-        max = ifelse(input$actual_scenario == "Electoral Votes", 538, 100),
+        max = 100,
         gaugeSectors(
-          success = ifelse(input$actual_scenario == "Electoral Votes", 
-                           c(270, 538),
-                           c(50.1, 100)), 
-          warning = ifelse(input$actual_scenario == "Electoral Votes", 
-                           c(269, 269),
-                           c(50, 50)), 
-          danger = ifelse(input$actual_scenario == "Electoral Votes", c(0, 268),
-                           c(0, 49.9))), 
-        label = ifelse(input$actual_scenario == "Electoral Votes", 
-                       "Electoral Votes \for Trump", 
-                       "Two-Party Popular Vote \for Trump"))
+          success = c(50.1, 100), 
+          warning = c(50, 50), 
+          danger = c(0, 49.9)), 
+        label = "Two-Party Popular Vote \nfor Biden")
+  
+)
+
+# Trump actual pv2p gauge
+
+renderGauge(
+  
+  gauge(100 - biden_actual_pv2p,
+        min = 0, 
+        max = 100,
+        gaugeSectors(
+          success = c(50.1, 100), 
+          warning = c(50, 50), 
+          danger = c(0, 49.9)), 
+        label = "Two-Party Popular Vote \nfor Trump")
+  
 )
 
 ```
 
 
-### Predicted Results
+Row
+-------------------------------------------------
 
-```{r predicted_gauge}
+### Predicted Electoral Votes
 
-radioButtons("pred_scenario",
-            "",
-            c("Electoral Votes", "Two-Party Popular Vote"))
+```{r pred_ev_gauge}
 
-biden_actual_pv2p <- enos_data %>% 
-  summarise(democrat = sum(democrat),
-            republican = sum(republican)) %>% 
-  summarise(democrat = round(democrat / (democrat + republican) * 100, 3)) %>% 
-  pull(democrat)
-
-# Biden gauge
+# Biden predicted EV gauge
 
 renderGauge(
 
-  gauge(ifelse(input$pred_scenario == "Electoral Votes", 273, 52.720), 
+  gauge(273,
         min = 0, 
-        max = ifelse(input$pred_scenario == "Electoral Votes", 538, 100),
+        max = 538,
         gaugeSectors(
-          success = ifelse(input$pred_scenario == "Electoral Votes", c(270, 538),
-                           c(50.1, 100)), 
-          warning = ifelse(input$pred_scenario == "Electoral Votes", c(269, 269),
-                           c(50, 50)), 
-          danger = ifelse(input$pred_scenario == "Electoral Votes", c(0, 268),
-                           c(0, 49.9))), 
-        label = ifelse(input$pred_scenario == "Electoral Votes", 
-                       "Electoral Votes \for Biden", 
-                       "Two-Party Popular Vote \for Biden"))
+          success = c(270, 538), 
+          warning = c(269, 269), 
+          danger = c(0, 268)), 
+        label = "Electoral Votes \nfor Biden")
 )
 
-# Trump gauge
+# Trump predicted EV gauge
 
 renderGauge(
   
-  gauge(ifelse(input$pred_scenario == "Electoral Votes", 265, 100 - 52.120),
+  gauge(265, 
         min = 0, 
-        max = ifelse(input$pred_scenario == "Electoral Votes", 538, 100),
+        max = 538,
         gaugeSectors(
-          success = ifelse(input$pred_scenario == "Electoral Votes", c(270, 538),
-                           c(50.1, 100)), 
-          warning = ifelse(input$pred_scenario == "Electoral Votes", c(269, 269),
-                           c(50, 50)), 
-          danger = ifelse(input$pred_scenario == "Electoral Votes", c(0, 268),
-                           c(0, 49.9))), 
-        label = ifelse(input$pred_scenario == "Electoral Votes", 
-                       "Electoral Votes \for Trump", 
-                       "Two-Party Popular Vote \for Trump"))
+          success = c(270, 538),
+          warning = c(269, 269), 
+          danger = c(0, 268)),
+        label = "Electoral Votes \nfor Trump")
 )
+```
+
+### Predicted Two-Party Popular Vote Share
+
+```{r predicted_pv2p_gauge}
+
+biden_pred_pv2p <- 52.720
+
+# Biden predicted pv2p gauge
+
+renderGauge(
+  
+  gauge(biden_pred_pv2p,
+        min = 0, 
+        max = 100,
+        gaugeSectors(
+          success = c(50.1, 100), 
+          warning = c(50, 50), 
+          danger = c(0, 49.9)), 
+        label = "Two-Party Popular Vote \nfor Biden")
+  
+)
+
+# Trump predicted pv2p gauge
+
+renderGauge(
+  
+  gauge(100 - biden_pred_pv2p,
+        min = 0, 
+        max = 100,
+        gaugeSectors(
+          success = c(50.1, 100), 
+          warning = c(50, 50), 
+          danger = c(0, 49.9)), 
+        label = "Two-Party Popular Vote \nfor Trump")
+  
+)
+
 
 ```
 
@@ -147,9 +183,12 @@ renderGauge(
 Maps
 ================================================
 
-The top map displays my Joe Biden's predicted two-party vote share, and the bottom displays the actual result. Hover over each state to see the state name and the exact number.
+For the initial tab, the predicted results are displayed on the left and the actual results are displayed on the right. Hover over each state to see the state name and the exact number. Notice that the colors on the error map are almost the inverse of the actual electoral map. This means that Donald Trump performed better than predicted in the more liberal states and Joe Biden performed better than predicted in the more conservative states. I discuss this in further detail and potential hypothesis for this in my full-length [model reflection](https://kayla-manning.github.io/gov1347/posts/reflection/reflection.html) on my blog.
 
+Maps {.tabset}
 -------------------------------------------------
+
+### Predicted vs. Actual Two-Party Vote Shares
 
 ```{r pred_map, warning=FALSE}
 
@@ -174,13 +213,6 @@ pred_map <- ggplotly(pred_compare %>%
         axis.text.x = element_blank()),
   tooltip = "text")
 
-renderPlotly(pred_map)
-
-```
-
--------------------------------------------------
-
-```{r actual_map}
 
 actual_map <- ggplotly(pred_compare %>% 
   left_join(us_map, by = c("state" = "region")) %>% 
@@ -196,7 +228,7 @@ actual_map <- ggplotly(pred_compare %>%
   labs(x = "",
        y = "",
        fill = "Biden's Two-Party \nVote Share",
-       title = "Actual Results") +
+       title = "Predicted vs. Actual Results") +
   theme_hodp() +
   theme(axis.line = element_blank(),
         axis.text = element_blank(),
@@ -204,12 +236,46 @@ actual_map <- ggplotly(pred_compare %>%
   tooltip = "text")
 
 renderPlotly(
-  actual_map
+  subplot(pred_map, actual_map)
 )
 
 ```
 
-###
+### Model Errors
+
+```{r error_map}
+
+renderPlotly(
+  ggplotly(pred_compare %>% 
+    left_join(us_map, by = c("state" = "region")) %>% 
+    ggplot(aes(long, lat, group = group, text = paste0("Difference between actual and \npredicted vote shares in ", 
+                                                       state, ": ", round(diff, 3), "%"))) +
+    geom_polygon(aes(fill = diff)) +
+    scale_fill_gradient2(low = my_red, mid = "white", high = my_blue,
+                         midpoint = 0, limits = c(-14, 14), labels = c(-10, 0, 10),
+                         breaks = c(-10, 0, 10)) +
+    coord_map() +
+    labs(x = "",
+         y = "",
+         fill = "Difference Between Biden's \nActual and Predicted \nTwo-Party Vote Share",
+         title = "Forecast Error") +
+    theme_hodp() +
+    theme(axis.line = element_blank(),
+          axis.text = element_blank(),
+          axis.text.x = element_blank()),
+    tooltip = "text") %>% 
+   layout(annotations = 
+            list(x = 1, y = -0.1, text = "Red indicates that Trump received a greater share of votes than predicted.", 
+                 showarrow = F, xref='paper', yref='paper', 
+                 xanchor='right', yanchor='auto', xshift=80, yshift=40,
+                 font=list(size=15))
+  )
+)
+
+```
+
+
+##
 
 ```{r error_table, max.height='100px'}
 
@@ -246,7 +312,7 @@ ev_sims_plot <- ev_sims %>%
                  inherit.aes = FALSE) +
     geom_histogram(aes(y = after_stat(count / sum(count)), fill = result), 
                    binwidth = 1, position = "identity", alpha = 0.75) +
-    labs(title = "",
+    labs(title = "Simulated Electoral Outcomes \nCompared to Actual Result",
          x = "Donald Trump's Electoral Votes",
          y = "Proportion of Simulations",
          fill = "Winner",
@@ -286,7 +352,7 @@ pv2p_sims_plot <- sims %>%
   scale_fill_manual(breaks = c("d_pv2p", "r_pv2p"),
                     labels = c("Biden", "Trump"),
                     values = c(my_blue, my_red)) +
-  labs(title = "",
+  labs(title = "Simulated Popular Vote Shares \nCompared to Actual Results",
        x = "Predicted Share of the Two-Party Popular Vote",
        y = "Count",
        subtitle = "Donald Trump Wins the Popular Vote in 0.049% of Simulations",
@@ -296,7 +362,7 @@ pv2p_sims_plot <- sims %>%
 renderPlotly(
   ggplotly(pv2p_sims_plot) %>% 
     add_annotations(text = "Trump Actual Outcome", x = 0.48, y = 0.002, textangle = 270) %>% 
-    add_annotations(text = "Biden Actual Outcome", x = 0.525, y = 0.002, textangle = 90)
+    add_annotations(text = "Biden Actual Outcome", x = 0.518, y = 0.002, textangle = 270)
 )  
 ```
 
@@ -313,7 +379,8 @@ selectInput("state_type_pv",
             "State Category:",
             types %>% pull(type) %>% unique())
 renderPlotly(
-  state_voteshares(input$state_type_pv)
+  state_voteshares(input$state_type_pv) %>%
+    layout(margin = list(b = 90))
 )
 ```
 
@@ -324,7 +391,8 @@ selectInput("state_type_win",
             "State Category:",
             types %>% pull(type) %>% unique())
 renderPlotly(
-  state_win_probs(input$state_type_win)
+  state_win_probs(input$state_type_win) %>%
+    layout(margin = list(b = 90))
 )
 ```
 
@@ -337,7 +405,8 @@ selectInput("state",
             "State:",
             sims %>% pull(state) %>% unique() %>% sort())
 renderPlotly(
-  pv2p_plot(input$state)
+  pv2p_plot(input$state) %>%
+    layout(margin = list(b = 90))
 )
 ```
 
@@ -371,10 +440,10 @@ renderPlotly(
 
 ```
 
-Row
+Changes Over Time
 -------------------------------------------------
 
-### Changes Over Time
+### 
 
 ```{r change_linegraph}
 
@@ -392,17 +461,19 @@ renderPlotly(
                              " in ", state),
                group = candidate)) +
     geom_line() +
-    geom_hline(yintercept = state_pred_pv2p(input$line_state, "biden"), linetype = "dashed", color = my_blue) +
-    geom_hline(yintercept = state_pred_pv2p(input$line_state, "trump"), linetype = "dashed", color = my_red) +
-    labs(y = "Two-Party Popular Vote Share",
-         title = "",
+    geom_hline(aes(yintercept = state_pred_pv2p(input$line_state, "biden")), 
+               linetype = "dashed", color = my_blue) +
+    geom_hline(aes(yintercept = state_pred_pv2p(input$line_state, "trump")), 
+               linetype = "dashed", color = my_red) +
+    labs(y = "Two-Party \nPopular Vote Share",
+         title = "Changes in Vote Share After Election Day",
          x = "",
          color = "Candidate",
          shape = "Incorrect Prediction?") +
     theme_hodp() +
-    scale_color_manual(breaks = c("Biden", "Trump"),
-                       values = c(my_blue, my_red)),
-  tooltip = "text")
+    scale_color_manual(values = c(my_blue, my_red, my_blue, my_red)),
+  tooltip = "text",
+  height = 350)
   
 )
 

@@ -17,6 +17,7 @@
   library(kableExtra)
   library(janitor)
   library(googlesheets4)
+  library(miniUI)
 }
 
 
@@ -123,12 +124,13 @@ pv2p_plot <- function(x) {
     scale_fill_manual(breaks = c("Democrat", "Republican"),
                       labels = c("Biden", "Trump"),
                       values = c(my_blue, my_red)) +
-    labs(title = "",
+    labs(title = title,
          x = "Predicted Share of the Two-Party Popular Vote",
          y = "Probability",
          fill = "Candidate",
          subtitle = pv2p_lab) +
-    theme_hodp()
+    theme_hodp() +
+    expand_limits(y = 0)
   
   ggplotly(pv_plot, tooltip = "text")
 }
@@ -183,7 +185,7 @@ state_voteshares <- function(x){
     labs(x = "",
          y = "Estimated Vote Share",
          fill = "Candidate",
-         title = "")
+         title = title)
   
   print(ggplotly(p, tooltip = "text"))
   
@@ -227,7 +229,7 @@ state_win_probs <- function(x) {
     labs(x = "",
          y = "Probability of \nVictory",
          fill = "Candidate",
-         title = "")
+         title = title)
     
   print(ggplotly(p, tooltip = "text"))
   
@@ -294,11 +296,11 @@ state_pred_pv2p <- function(x, candidate) {
     pull(value)
     
   if (candidate == "biden") {
-    pv2ps[1]
+    return(pv2ps[1])
   }
   
   if (candidate == "trump") {
-    pv2ps[2]
+    return(pv2ps[2])
   }
     
 }

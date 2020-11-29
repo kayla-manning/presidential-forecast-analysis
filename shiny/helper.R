@@ -18,7 +18,12 @@
   library(janitor)
   library(googlesheets4)
   library(miniUI)
+  library(maps)
 }
+
+# need to suspend authorization for googlesheets4 package in order to run app
+
+gs4_deauth()
 
 
 # reading in data, saved as .csv from the last simulation on 11/1
@@ -235,7 +240,7 @@ state_win_probs <- function(x) {
   
 }
 
-us_map <- map_data("state") %>% 
+us_map <- ggplot2::map_data("state") %>% 
   mutate(region = toupper(region),
          region = state.abb[match(region,  toupper(state.name))])
 

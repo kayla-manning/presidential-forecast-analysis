@@ -1,4 +1,3 @@
-
 # reading in data and defining functions here so that my shiny app stays nice
 # and clean
 
@@ -20,6 +19,7 @@
   library(googlesheets4)
   library(miniUI)
   library(maps)
+  library(mapproj)
 }
 
 # need to suspend authorization for googlesheets4 package in order to run app
@@ -27,10 +27,12 @@
 gs4_deauth()
 
 
-# reading in data, saved as .csv from the last simulation on 11/1
+# reading in data, saved as .csv from the last simulation on 11/1 using subset
+# of simulations (10,000 for each state since I was having memory issues when
+# trying to publish my original shiny app)
 
 {
-  sims <- read_csv("app-data/election_simulation_results.csv")
+  sims <- read_csv("app-data/simulations_subset.csv")
   ev_sims <- read_csv("app-data/ev_uncertainty.csv") %>% 
     select(id, biden_ev, trump_ev)
   pred_compare <- read_csv("app-data/pred_compare.csv")
@@ -236,7 +238,7 @@ state_win_probs <- function(x) {
          y = "Probability of \nVictory",
          fill = "Candidate",
          title = title)
-    
+  
   print(ggplotly(p, tooltip = "text"))
   
 }
@@ -300,7 +302,7 @@ state_pred_pv2p <- function(x, candidate) {
     select(2:3) %>% 
     pivot_longer(cols = everything(), names_to = "party") %>% 
     pull(value)
-    
+  
   if (candidate == "biden") {
     return(pv2ps[1])
   }
@@ -308,7 +310,7 @@ state_pred_pv2p <- function(x, candidate) {
   if (candidate == "trump") {
     return(pv2ps[2])
   }
-    
+  
 }
 
 

@@ -14,11 +14,9 @@ knitr::opts_chunk$set(echo = FALSE)
 
 # I loaded all of my packages and data in the helper.R file
 
-source("helper.R")
+source("subset_helper.R")
 
-# reading in the full simulations file here so that you can see the complete graphs
-
-sims <- read_csv("app-data/election_simulation_results.csv")
+sims <- read_csv("app-data/simulations_subset.csv")
 
 ```
 
@@ -362,7 +360,7 @@ renderPlotly(
 # forecast
 
 pv2p_sims_plot <- sims %>% 
-  mutate(group = rep(1:100000, times = 50)) %>% 
+  mutate(group = rep(1:10000, times = 50)) %>% 
   group_by(group) %>% 
   summarize(total_dem = sum(sim_dvotes_2020),
          total_rep = sum(sim_rvotes_2020),

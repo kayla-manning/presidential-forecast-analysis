@@ -33,9 +33,9 @@ gs4_deauth()
 
 {
   sims <- read_csv("https://raw.githubusercontent.com/kayla-manning/presidential-forecast-analysis/main/shiny/app-data/simulations_subset.csv")
-  ev_sims <- read_csv("app-data/ev_uncertainty.csv") %>% 
+  ev_sims <- read_csv("https://raw.githubusercontent.com/kayla-manning/presidential-forecast-analysis/main/shiny/app-data/ev_uncertainty.csv") %>% 
     select(id, biden_ev, trump_ev)
-  pred_compare <- read_csv("app-data/pred_compare.csv")
+  pred_compare <- read_csv("https://raw.githubusercontent.com/kayla-manning/presidential-forecast-analysis/main/shiny/app-data/pred_compare.csv")
   changes <- read_csv("https://raw.githubusercontent.com/alex/nyt-2020-election-scraper/master/all-state-changes.csv") %>% 
     mutate(state = str_replace(state, " \\(.*\\)", ""),
            state = state.abb[match(state, state.name)],

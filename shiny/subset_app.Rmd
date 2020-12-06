@@ -25,7 +25,7 @@ Home
 
 ### About
 
-This interactive tool aims to supplement a semester-long project in which I forecasted the 2020 Presidential Election. The below interactive tools present and contextualize my predictions in a more visual manner than I did in my blog posts. Nate Silver, if you're seeing this, please hire me! See my full election blog and forecast write-up [here](https://kayla-manning.github.io/gov1347/). If you would like to take a closer look at the code to produce this app, feel free to poke around [this](https://github.com/kayla-manning/presidential-forecast-analysis) Github repository. The code for the original forecast is located at [this](https://github.com/kayla-manning/gov1347) repository.
+This interactive tool aims to supplement a semester-long project in which I forecasted the 2020 Presidential Election. The below interactive tools present and contextualize my predictions in a more visual manner than I did in my blog posts. Nate Silver, if you're seeing this, please hire me! See my full election blog and forecast write-up [here](https://kayla-manning.github.io/gov1347/). If you would like to take a closer look at the code to produce this app, feel free to poke around [this](https://github.com/kayla-manning/presidential-forecast-analysis) Github repository. The code for the original forecast is located at [this](https://github.com/kayla-manning/gov1347) repository. See [this link](https://youtu.be/fa94svSKCz4) for a video walkthrough of my app.
 
 Row
 -------------------------------------------------
